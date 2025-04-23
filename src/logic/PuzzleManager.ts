@@ -21,9 +21,14 @@ export class PuzzleManager {
         PuzzleStorage.updateProgress(puzzleId, { completed: true });
     }
 
-    useHint(puzzleId: string) {
+    useHint(puzzleId: string, index: number) {
         const progress = PuzzleStorage.getProgress();
         const prev = progress[puzzleId]?.hints_used || 0;
-        PuzzleStorage.updateProgress(puzzleId, { hints_used: prev + 1 });
+
+        // Store max(index + 1, existing)
+        const used = Math.max(prev, index + 1);
+
+        PuzzleStorage.updateProgress(puzzleId, { hints_used: used });
     }
+
 }
