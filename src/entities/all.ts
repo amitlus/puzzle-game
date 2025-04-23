@@ -7,6 +7,7 @@ export const PuzzleAPI = {
             title: "The First Puzzle",
             story_text: "You found a strange encrypted note...",
             puzzle_type: "cipher",
+            content: "Decode the hidden message in the text.",
             answer: "echo",
             image_url: "",
             hints: ["Try thinking like a signal...", "It's something you hear."],
@@ -17,8 +18,12 @@ export const PuzzleAPI = {
 
 export const ProgressAPI = {
     filter: async (): Promise<Progress[]> => [],
-    create: async (progress: Progress): Promise<void> => {},
-    update: async (id: string, progress: Partial<Progress>): Promise<void> => {},
+    create: async (_progress: Progress): Promise<void> => {
+        // mock create
+    },
+    update: async (_id: string, _progress: Partial<Progress>): Promise<void> => {
+        // mock update
+    },
 };
 
 export const UserAPI = {
