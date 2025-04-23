@@ -15,21 +15,22 @@ export default function Game() {
     const [progress, setProgress] = useState(PuzzleStorage.getProgress());
     const [selectedCategory, setSelectedCategory] = useState<"all" | Puzzle["puzzle_type"]>("all");
 
-    const allPuzzles = puzzleManager.getAll();
-    const filteredPuzzles = selectedCategory === "all"
-        ? allPuzzles
-        : allPuzzles.filter(p => p.puzzle_type === selectedCategory);
-
-    const currentPuzzle = filteredPuzzles[currentIndex];
-    const totalPuzzles = filteredPuzzles.length;
-
     useEffect(() => {
         setProgress(PuzzleStorage.getProgress());
     }, []);
 
-    const currentPuzzle: Puzzle | null = puzzleManager.getByIndex(currentIndex);
-    const totalPuzzles = puzzleManager.getCount();
-    const completedCount = Object.values(progress).filter(p => p.completed).length;
+    const allPuzzles = puzzleManager.getAll();
+    const filteredPuzzles =
+        selectedCategory === "all"
+            ? allPuzzles
+            : allPuzzles.filter((p) => p.puzzle_type === selectedCategory);
+
+    const currentPuzzle = filteredPuzzles[currentIndex];
+    const totalPuzzles = filteredPuzzles.length;
+
+    const completedCount = Object.entries(progress).filter(
+        ([id, p]) => p.completed && filteredPuzzles.find((pz) => pz.id === id)
+    ).length;
 
     const handleAnswer = async (answer: string): Promise<boolean> => {
         if (!currentPuzzle) return false;
@@ -44,21 +45,52 @@ export default function Game() {
 
     const handleHintUse = (index: number) => {
         if (!currentPuzzle) return;
-        puzzleManager.useHint(currentPuzzle.id);
+        puzzleManager.useHint(currentPuzzle.id, index);
         setProgress(PuzzleStorage.getProgress());
     };
 
     const navigate = (dir: number) => {
         const newIndex = currentIndex + dir;
-        if (newIndex >= 0 && newIndex < totalPuzzles) {
+        if (newIndex >= 0 && newIndex < filteredPuzzles.length) {
             setCurrentIndex(newIndex);
             setIsCorrect(false);
         }
     };
 
+    const categories: ("all" | Puzzle["puzzle_type"])[] = [
+        "all",
+        "logic",
+        "visual",
+        "cipher",
+        "motion",
+        "sequence",
+    ];
+
     return (
         <div className="min-h-screen bg-gray-900 text-white p-6">
             <div className="max-w-3xl mx-auto space-y-8">
+                {/* Category Filter */}
+                <div className="flex flex-wrap gap-2 mb-4">
+                    {categories.map((cat) => (
+                        <button
+                            key={cat}
+                            onClick={() => {
+                                setSelectedCategory(cat);
+                                setCurrentIndex(0);
+                                setIsCorrect(false);
+                            }}
+                            className={`px-3 py-1 rounded-full text-sm font-medium ${
+                                selectedCategory === cat
+                                    ? "bg-blue-600 text-white"
+                                    : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                            }`}
+                        >
+                            {cat.toUpperCase()}
+                        </button>
+                    ))}
+                </div>
+
+                {/* Navigation Bar */}
                 <div className="flex justify-between items-center">
                     <button
                         onClick={() => navigate(-1)}
@@ -82,6 +114,22 @@ export default function Game() {
                     </button>
                 </div>
 
+                {/* Puzzle Progress Bar */}
+                <div className="space-y-2">
+                    <p className="text-sm text-gray-400 text-right">
+                        Progress: {completedCount} / {totalPuzzles}
+                    </p>
+                    <div className="w-full bg-gray-700 rounded h-3 overflow-hidden">
+                        <div
+                            className="bg-blue-500 h-full transition-all duration-300"
+                            style={{
+                                width: `${(completedCount / totalPuzzles) * 100}%`,
+                            }}
+                        />
+                    </div>
+                </div>
+
+                {/* Puzzle Content */}
                 <AnimatePresence mode="wait">
                     {currentPuzzle && (
                         <motion.div
